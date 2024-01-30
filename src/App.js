@@ -46,7 +46,7 @@ function App() {
     const options = {
       key: 'rzp_test_BqwXmtR5v1PWNh',
       currency: 'INR',
-      amount: 10000,
+      amount: 3900,
       name: 'eveo',
       description: 'Thanks for joining',
       handler: function (response) {
