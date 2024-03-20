@@ -22,18 +22,14 @@ try {
 app.use(bodyParser.json());
 app.use(cors());
 
-// Endpoint to receive the email and store it
 app.post('/test', (req, res) => {
   const { Email } = req.body;
   if (!Email) {
     return res.status(400).send({ message: 'Email is required' });
   }
-
-  // For simplicity, just push the email to the list
   emailList.push(Email);
   count++;
 
-  // Write data to file
   try {
     fs.writeFileSync(dataFilePath, JSON.stringify({ count, emailList }));
     res.status(200).send({ message: 'Email stored successfully', count });
@@ -43,7 +39,6 @@ app.post('/test', (req, res) => {
   }
 });
 
-// Endpoint to retrieve the count
 app.get('/test', (req, res) => {
   res.status(200).send({ count });
 });
