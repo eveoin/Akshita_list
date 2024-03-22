@@ -1,11 +1,13 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0);
   const [email, setEmail] = useState('');
   const [isValidEmail, setIsValidEmail] = useState(true);
+  const [count, setCount] = useState(0);
+  const [updatedCount, setUpdatedCount] = useState();
+  const [token, setToken] = useState('');
 
   const loadScript = (src) => {
     return new Promise((resolve) => {
@@ -21,10 +23,6 @@ function App() {
     });
   };
 
-  const handleClick = () => {
-    setCount(count + 1);
-  };
-
   const validateEmail = (email) => {
     const regex = /^[a-z0-9]+@[a-z]+\.[a-z]{2,3}$/;
     return regex.test(email);
@@ -36,16 +34,14 @@ function App() {
       return;
     }
 
-    
-    
-
     const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
     if (!res) {
       alert('You are offline...... Failed to load razorpay SDK');
       return;
     }
 
-    const options = {
+    c
+    onst options = {
       key: 'rzp_test_BqwXmtR5v1PWNh',
       currency: 'INR',
       amount: 3900,
@@ -57,9 +53,10 @@ function App() {
         };
 
         try {
-          await axios.post('http://127.0.0.1/test', jsonData, {
+          await axios.post('http://localhost:5000/test', jsonData, {
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
             },
           });
 
@@ -67,9 +64,8 @@ function App() {
           const storedEmail = localStorage.getItem('userEmail');
           localStorage.setItem('userEmail', email);
           console.log('Stored Email:', storedEmail);
-          handleClick();
+          updateCount();
         } catch (error) {
-       
           console.error('Error:', error);
         }
       },
@@ -80,12 +76,41 @@ function App() {
 
     const paymentObject = new window.Razorpay(options);
     paymentObject.open();
+  };
 
-};
+  const updateCount = useCallback(async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/test', {
+        headers: {
+          'Authorization': `Bearer ${token}` 
+        }
+      });
+      setCount(response.data.count);
+      setUpdatedCount(response.data.count);
+    } catch (error) {
+      console.error('Error fetching count:', error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    
+    const fetchToken = async () => {
+      try {
+        const response = await axios.post('http://localhost:5000/login', {
+          email: 'user@example.com',
+          password: 'password'
+        });
+        setToken(response.data.token);
+      } catch (error) {
+        console.error('Error fetching token:', error);
+      }
+    };
+    fetchToken();
+  }, []);
 
   return (
     <div className="App">
-      <form action="http://localhost:3001/" method="post">
+      <form action="http://localhost:5000/test" method="get">
         <div className="input-group">
           <label>Enter your mail:</label>
           {!isValidEmail && <p style={{ color: 'red' }}>Invalid email address</p>}
@@ -103,15 +128,11 @@ function App() {
         </div>
         <div>
           <h2>Waiting List</h2>
-          <button>
-            <ul>{count}</ul>
-          </button>
-          
-        </div>
-      </form>
-    </div>
+          <p id="count">{updatedCount !== null ? updatedCount : count}</p>
+      </div>
+     </form>
+   </div>
   );
-}
+ }
 
 export default App;
-
